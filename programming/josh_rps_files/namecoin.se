@@ -1,0 +1,13 @@
+def register(key, value):
+	#If not already registered, register it!
+	if not self.storage[key]:
+		self.storage[key] = value
+		return(1)
+	else:
+		return(-1)
+def get(key):
+	#Returns -1 if not registered, returns value if registered
+	if not self.storage[key]:
+		return(-1)
+	else:
+		return(self.storage[key])
