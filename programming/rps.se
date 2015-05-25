@@ -4,24 +4,35 @@ data reward
 data timer_start
 data check_winner[3][3]
 def init():
-    #If 2, tie
-    #If 0, player 0 wins
-    #If 1, player 1 wins
-    #0 = rock
-    #1 = paper
-    #2 = scissors
+    # TODO WHAT ARE THESE?
+    #0 ~ player 0 wins
+    #1 ~ player 1 wins
+    #2 ~ tie
+
+    # TODO WHAT ARE THESE?
+    #0 ~ rock
+    #1 ~ paper
+    #2 ~ scissors
+
+    # TODO Let's figure out a way to do this more intuitive. 
+    # We can use words, are dictionaries supported?
+    # TODO this logic probably doesn't need to happen in init
     self.check_winner[0][0] = 2
     self.check_winner[1][1] = 2
     self.check_winner[2][2] = 2
+
     #Rock beats scissors
     self.check_winner[0][2] = 0
     self.check_winner[2][0] = 1
+
     #Scissors beats paper
     self.check_winner[2][1] = 0
     self.check_winner[1][2] = 1
+
     #Paper beats rock
     self.check_winner[1][0] = 0
     self.check_winner[0][1] = 1
+
     self.num_players = 0
 
 #accepts a hash from the player in form sha3(address, choice, nonce)
