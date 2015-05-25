@@ -31,11 +31,13 @@ choice = ["rock", "paper", "scissors"]
 # bs stands for byte string
 choice0 = random.randint(0,2)
 choice0_bs = hex_to_byte_string(choice0)
-nonce0_bs = hex_to_byte_string(0x01)
+nonce0 = 0x01
+nonce0_bs = hex_to_byte_string(nonce0)
 
 choice1 = random.randint(0,2)
 choice1_bs = hex_to_byte_string(choice1)
-nonce1_bs = hex_to_byte_string(0x01)
+nonce1 = 0x01
+nonce1_bs = hex_to_byte_string(nonce1)
 
 print("Player zero chooses %d which is: %s" % (choice0, choice[choice0]))
 print("Player one chooses %d which is: %s" % (choice1, choice[choice1]))
@@ -56,13 +58,15 @@ s1 = ''.join([k1_pub_addr, choice1_bs, nonce1_bs])
 comm0 = utils.sha3(s0)
 comm1 = utils.sha3(s1)
 
-# TODO fix this comment
-# add players to the game
+# add players to the contract/game
 o = c.add_player(comm0, value=1000, sender=tester.k0)
 o = c.add_player(comm1, value=1000, sender=tester.k1)
-o = c.open(0x01, 0x01, sender=tester.k0)
-o = c.open(0x00, 0x01, sender=tester.k1)
-# needed to move the blockchain at least 10 blocks so check can run
+
+# TODO add comment here
+o = c.open(choice0, nonce0, sender=tester.k0)
+o = c.open(choice1, nonce1, sender=tester.k1)
+
+# move the blockchain at least 10 blocks so check can run
 s.mine(11)
 o = c.check(sender=tester.k1)
 print("Check says player {} wins\n").format(o)
