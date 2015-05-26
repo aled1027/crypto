@@ -1,9 +1,8 @@
 import serpent
 from ethereum import tester, utils, abi
-from sha3 import sha3_256
 import random
 
-tester.enable_logging()
+# tester.enable_logging()
 
 # 1. create a new state
 s = tester.state()
@@ -55,6 +54,8 @@ s0 = ''.join([k0_pub_addr, choice0_bs, nonce0_bs])
 s1 = ''.join([k1_pub_addr, choice1_bs, nonce1_bs])
 
 # commitments
+# comm0 = utils.sha3(s0)
+# comm1 = utils.sha3(s1)
 comm0 = utils.sha3(s0)
 comm1 = utils.sha3(s1)
 
@@ -71,3 +72,16 @@ s.mine(11)
 o = c.check(sender=tester.k1)
 print("Check says player {} wins\n").format(o)
 c.balance_check(sender=tester.k0)
+print ''
+print ''
+print c.sha3_check()
+print ''
+print ''
+print c.sha256_check()
+print ''
+print ''
+from sha3 import sha3_256
+sh = sha3_256()
+# sh.update('1')
+sh.update(int(0xf1fc122bc7f5d74df2b9441a42a14695))
+print (sh.hexdigest(),16)
