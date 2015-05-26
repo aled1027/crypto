@@ -1,0 +1,23 @@
+data player[2](address, commit, choice, has_revealed)
+data num_players
+data reward
+data timer_start
+data check_winner[3][3]
+
+
+### SOME NOTES ###
+
+# self.test_callstack() is used to prevent a max call stack exception
+
+def init():
+    pass
+        
+def sha3_check(a):
+    b = sha3(a)
+    return(b)
+
+def sha256_check(a):
+    return(sha256(a))
+
+def test_callstack():
+    return(1)

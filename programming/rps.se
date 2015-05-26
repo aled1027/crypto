@@ -5,47 +5,46 @@ data timer_start
 data check_winner[3][3]
 
 
-### SOME NOTES ###
-
-# self.test_callstack() is used to prevent a max call stack exception
-
 def init():
-    # TODO WHAT ARE THESE?
-    #0 ~ player 0 wins
-    #1 ~ player 1 wins
-    #2 ~ tie
+    self.num_players = 0
 
-    # TODO WHAT ARE THESE?
-    #0 ~ rock
-    #1 ~ paper
-    #2 ~ scissors
+def check_winner(c0, c1):
+    # determine the winner of the rps game
+    # c0 is the choice of player 0
+    # c1 is the choice of player 1
 
-    # TODO Let's figure out a way to do this more intuitive. 
-    # We can use words, are dictionaries supported?
-    # TODO this logic probably doesn't need to happen in init
+    # returning 0 indicates player 0 wins
+    # returning 1 indicates player 1 wins
+    # returning 2 indicates a tie
+
+    # 0 ~ rock
+    # 1 ~ paper
+    # 2 ~ scissors
+
+    # same choice means tie
     self.check_winner[0][0] = 2
     self.check_winner[1][1] = 2
     self.check_winner[2][2] = 2
 
-    #Rock beats scissors
+    # rock beats scissors
     self.check_winner[0][2] = 0
     self.check_winner[2][0] = 1
 
-    #Scissors beats paper
+    # scissors beats paper
     self.check_winner[2][1] = 0
     self.check_winner[1][2] = 1
 
-    #Paper beats rock
+    # paper beats rock
     self.check_winner[1][0] = 0
     self.check_winner[0][1] = 1
 
-    self.num_players = 0
+    return(self.check_winner[c0][c1])
 
+   
 def add_player(player_commitment):
-    # player_commitment is of the form: sha(address, choice, nonce)
+    # accepts a hash from the player in form sha3(address, choice, nonce)
 
     if self.test_callstack() != 1:
-        log('test_callstack error in add_player')
         return(-1)
 
     if self.num_players < 2 and msg.value >= 1000:
@@ -54,113 +53,98 @@ def add_player(player_commitment):
         self.player[self.num_players].commit = player_commitment
         self.num_players = self.num_players + 1
 
-        # TODO why does this happen?
         if msg.value - 1000 > 0:
             send(0, msg.sender, msg.value-1000)
         return(0)
-
     else:    
-        # don't add the player...
         if msg.value > 0 :
-            # prevent leakage of money
+            # prevent unnecessary leakage of money
             send(0, msg.sender, msg.value)
         return(-1)
         
 def open(choice, nonce):
-    # TODO write better description of function
-    # open() verifies the choice in their committed answer matches
+    # open the commitment
+    if self.test_callstack() != 1:
+        return(-2)
 
-    if self.test_callstack() != 1: 
-        log('test_callstack error in open')
+    if not num_players == 2:
+        return(-3)
+
+    if choice != 0 and choice != 1 and choice != 2:
         return(-1)
 
-    # Ensure two players are in the contract
-    if not num_players == 2: 
-        return(-1)
-
-    # Determine which player submitted the open request
-    # TODO rename player_num to be more descriptive
+    # determine which player submitted the open request
     if msg.sender == self.player[0].address:
-        player_num = 0
+        player = 0
     elif msg.sender == self.player[1].address:
-        player_num = 1
+        player = 1
     else:
         log('sender error')
         return(-1)
 
-    # Check the commitment and ensure they have not tried to commit already
-    if sha3([msg.sender, choice, nonce], items=3) == self.player[player_num].commit and not self.player[player_num].has_revealed:
-
+    # check the commitment and ensure the player has not tried to commit already
+    if sha3([msg.sender, choice, nonce], items=3) == self.player[player].commit and not self.player[player].has_revealed:
         #If commitment verified, we should store choice in plain text
-        self.player[player_num].choice = choice
+        self.player[player].choice = choice
 
-        #Store current block number to give other player 10 blocks to open their commit
-        self.player[player_num].has_revealed = 1        
+        # store current block number to give other player 10 blocks to open their commit
+        self.player[player].has_revealed = 1        
+
         if not self.timer_start:
             self.timer_start = block.number
         return(0)
     else:
-        log('commit error')
-        return(-2)
-
-def sha3_check():
-    return(sha3(1))
-
-def sha256_check():
-    return (sha256([0xf1fc122bc7f5d74df2b9441a42a1469500000000000000000000000000000000], chars=16))
-    # return(sha256(1))
-
+        return(msg.sender)
 
 def check():
     if self.test_callstack() != 1: 
-        log('test_callstack error in check')
-        return(-1)
+        return(-5)
 
-    # something about 10 blocks need to have passed to ensure that players have commited their move.
-    # kinda weird but realistic, whatever
     if block.number - self.timer_start < 10: 
+        # this ensures that the players had time to commit
         return(-2)
 
-    # See if both players have revealed answer
     if self.player[0].has_revealed and self.player[1].has_revealed:
-
         p0_choice = self.player[0].choice
         p1_choice = self.player[1].choice
+        winner = self.check_winner(p0_choice, p1_choice)
 
-        #If player 0 wins
-        if self.check_winner[p0_choice][p1_choice] == 0:
-            send(0, self.player[0].address, self.reward)
+        if winner == 0:
+            # player 0 wins
+            send(0,self.player[0].address, self.reward)
             return(0)
-
-        #If player 1 wins
-        elif self.check_winner[p0_choice][p1_choice] == 1:
-            send(0, self.player[1].address, self.reward)
+        elif winner == 1:
+            # player 1 wins
+            send(0,self.player[0].address, self.reward)
             return(1)
-
-        #If no one wins
-        else:
+        elif winner == 2:
+            # tie
             send(0,self.player[0].address, self.reward/2)
             send(0,self.player[1].address, self.reward/2)
             return(2)
+        else:
+            log('error, unclear who won')
+            return(-1)
 
-    #if p1 revealed but p2 did not, send money to p1
     elif self.player[0].has_revealed and not self.player[1].has_revealed:
+        # p0 revealed but p1 did not, so send money to p0
         send(0,self.player[0].address, self.reward)
         return(0)
-
-    #if p2 revealed but p1 did not, send money to p2
     elif not self.player[0].has_revealed and self.player[1].has_revealed:
+        # p2 revealed but p0 did not, so send money to p1
         send(0,self.player[1].address, self.reward)
         return(1)
-
-    #if neither p1 nor p2 revealed, keep both of their bets
     else:
-        return(-1)
+        return(-7)
 
-#returns the balance to ensure funds were lost and won properly
 def balance_check():
+    # returns the balance to ensure funds were lost and won properly
     log(self.storage["player1"].balance)
     log(self.storage["player2"].balance)
 
 def test_callstack():
+    # this called in order to prevent a max callstack exception
     return(1)
+
+def return_sender():
+    return(msg.sender)
